@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 84% 4.9%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 94.1%;
+  --radius: 0.5rem;
+}
+
+body {
+  @apply text-white min-h-screen;
+  background-color: #1a1a1a;
+  font-family: Arial, sans-serif;
+}
+
+.glass-effect {
+  @apply backdrop-blur-xl bg-white/10 border border-white/20;
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent;
+}
+
+h1, h2, h3 {
+  color: #ff69b4;
+}
+
+.card-hover {
+  @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-pink-500/25;
+}
+
+.qr-container {
+  @apply p-4 bg-white rounded-lg shadow-lg;
+}
+
+.metric-card {
+  @apply glass-effect rounded-xl p-6 card-hover;
+}
+
+.url-card {
+  @apply glass-effect rounded-xl p-6 card-hover border-l-4 border-l-blue-400;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
