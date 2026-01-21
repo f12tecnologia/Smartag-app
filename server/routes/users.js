@@ -17,7 +17,7 @@ router.get('/', authenticateToken, isAdmin, async (req, res) => {
     const result = await query(
       `SELECT u.id, u.email, u.role, u.created_at, p.full_name 
        FROM users u 
-       LEFT JOIN profiles p ON u.id = p.user_id 
+       LEFT JOIN profiles p ON u.id::text = p.id::text 
        ORDER BY u.created_at DESC`
     );
     res.json(result.rows);
@@ -48,8 +48,9 @@ router.post('/invite', authenticateToken, isAdmin, async (req, res) => {
     
     const user = result.rows[0];
     
+    // Usando id::text para garantir compatibilidade com UUID se necessário
     await query(
-      'INSERT INTO profiles (user_id, full_name) VALUES ($1, $2)',
+      'INSERT INTO profiles (id, full_name) VALUES ($1::uuid, $2)',
       [user.id, full_name || '']
     );
     
@@ -93,7 +94,7 @@ router.delete('/:id', authenticateToken, isAdmin, async (req, res) => {
   }
   
   try {
-    await query('DELETE FROM profiles WHERE user_id = $1', [id]);
+    await query('DELETE FROM profiles WHERE id::text = $1', [id]);
     const result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
     
     if (result.rows.length === 0) {
