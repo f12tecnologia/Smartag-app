@@ -20,16 +20,11 @@ router.post('/signup', async (req, res) => {
     
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await query(
-      'INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role',
-      [email, hashedPassword, 'user']
+      'INSERT INTO users (email, password_hash, full_name, role) VALUES ($1, $2, $3, $4) RETURNING id, email, role',
+      [email, hashedPassword, full_name || '', 'user']
     );
     
     const user = result.rows[0];
-    
-    await query(
-      'INSERT INTO profiles (user_id, full_name) VALUES ($1, $2)',
-      [user.id, full_name || '']
-    );
     
     const token = generateToken(user);
     res.status(201).json({ user, token });
@@ -54,7 +49,7 @@ router.post('/signin', async (req, res) => {
     }
     
     const user = result.rows[0];
-    const validPassword = await bcrypt.compare(password, user.password);
+    const validPassword = await bcrypt.compare(password, user.password_hash);
     
     if (!validPassword) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
