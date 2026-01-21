@@ -20,15 +20,16 @@ A React-based dashboard application for QR code management with authentication, 
 - `server/` - Backend Express server
   - `routes/` - API routes (auth, qrCodes, profile, users)
   - `middleware/` - JWT authentication middleware
-  - `db.js` - PostgreSQL connection
-  - `schema.sql` - Database schema
+  - `db.js` - PostgreSQL connection with auto-initialization
 
-## Database Schema
-Tables: users, profiles, qr_codes
-- Execute `server/schema.sql` on your external PostgreSQL to create tables
+## Database
+- Uses external PostgreSQL database via EXTERNAL_DATABASE_URL
+- Auto-initializes schema on startup (users, profiles, qr_codes tables)
+- Pre-seeds 20 QR codes from original CSV data if table is empty
+- Works with existing database schemas (handles UUID/VARCHAR id mismatches)
 
 ## Environment Variables
-- `EXTERNAL_DATABASE_URL` - PostgreSQL connection string
+- `EXTERNAL_DATABASE_URL` - PostgreSQL connection string (required)
 - `SESSION_SECRET` - JWT signing secret
 
 ## Development
@@ -50,3 +51,8 @@ Tables: users, profiles, qr_codes
 ## User Preferences
 - Portuguese language interface
 - Dark theme UI
+
+## Recent Changes (Jan 2026)
+- Added auto-initialization of database schema on startup
+- Fixed profile route to handle UUID/VARCHAR id type mismatches
+- Pre-seeds 20 QR codes from CSV data on first run

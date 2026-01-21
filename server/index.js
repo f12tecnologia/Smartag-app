@@ -3,7 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { testConnection } from './db.js';
+import { testConnection, initializeDatabase } from './db.js';
 import authRoutes from './routes/auth.js';
 import qrCodesRoutes from './routes/qrCodes.js';
 import profileRoutes from './routes/profile.js';
@@ -53,6 +53,8 @@ const startServer = async () => {
   const dbConnected = await testConnection();
   if (!dbConnected) {
     console.error('Failed to connect to database. Server will start but database operations will fail.');
+  } else {
+    await initializeDatabase();
   }
   
   const host = '0.0.0.0';
