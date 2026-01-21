@@ -19,6 +19,8 @@ export const testConnection = async () => {
   try {
     const client = await pool.connect();
     console.log('Connected to PostgreSQL database successfully');
+    const res = await client.query('SELECT current_schema(), current_user');
+    console.log('Database context:', res.rows[0]);
     client.release();
     return true;
   } catch (error) {

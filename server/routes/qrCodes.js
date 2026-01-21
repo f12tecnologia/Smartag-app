@@ -1,6 +1,7 @@
 import express from 'express';
 import { query } from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const result = await query(
       'SELECT id, title, url, type, category, description, clicks, created_at FROM qr_codes ORDER BY created_at DESC'
     );
-    res.json(result.rows);
+    res.json(result.rows || []);
   } catch (error) {
     console.error('Error fetching QR codes:', error);
     res.status(500).json({ error: 'Erro ao buscar QR codes' });
@@ -24,11 +25,12 @@ router.post('/', authenticateToken, async (req, res) => {
   }
   
   try {
+    const id = uuidv4();
     const result = await query(
-      `INSERT INTO qr_codes (title, url, type, category, description, clicks, created_at) 
-       VALUES ($1, $2, $3, $4, $5, 0, NOW()) 
+      `INSERT INTO qr_codes (id, title, url, type, category, description, clicks, created_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, 0, NOW()) 
        RETURNING *`,
-      [title || '', url, type || 'url', category || '', description || '']
+      [id, title || '', url, type || 'url', category || '', description || '']
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -61,20 +63,25 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-router.delete('/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
+router.get('/reports', authenticateToken, async (req, res) => {
+  const { from, to } = req.query;
   
   try {
-    const result = await query('DELETE FROM qr_codes WHERE id = $1 RETURNING id', [id]);
+    let queryText = 'SELECT id, title, url, type, category, description, clicks, created_at FROM qr_codes';
+    const params = [];
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'QR code não encontrado' });
+    if (from && to) {
+      queryText += ' WHERE created_at >= $1 AND created_at <= $2';
+      params.push(from, to);
     }
     
-    res.json({ message: 'QR code removido com sucesso' });
+    queryText += ' ORDER BY created_at DESC';
+    
+    const result = await query(queryText, params);
+    res.json(result.rows);
   } catch (error) {
-    console.error('Error deleting QR code:', error);
-    res.status(500).json({ error: 'Erro ao remover QR code' });
+    console.error('Error fetching reports:', error);
+    res.status(500).json({ error: 'Erro ao buscar relatórios' });
   }
 });
 
@@ -105,25 +112,20 @@ router.get('/redirect/:id', async (req, res) => {
   }
 });
 
-router.get('/reports', authenticateToken, async (req, res) => {
-  const { from, to } = req.query;
+router.delete('/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
   
   try {
-    let queryText = 'SELECT * FROM qr_codes';
-    const params = [];
+    const result = await query('DELETE FROM qr_codes WHERE id = $1 RETURNING id', [id]);
     
-    if (from && to) {
-      queryText += ' WHERE created_at >= $1 AND created_at <= $2';
-      params.push(from, to);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'QR code não encontrado' });
     }
     
-    queryText += ' ORDER BY created_at DESC';
-    
-    const result = await query(queryText, params);
-    res.json(result.rows);
+    res.json({ message: 'QR code removido com sucesso' });
   } catch (error) {
-    console.error('Error fetching reports:', error);
-    res.status(500).json({ error: 'Erro ao buscar relatórios' });
+    console.error('Error deleting QR code:', error);
+    res.status(500).json({ error: 'Erro ao remover QR code' });
   }
 });
 
