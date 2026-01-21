@@ -40,11 +40,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Move explicit health check for / to ensure it responds quickly
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
+
 if (isProduction) {
   const distPath = path.join(__dirname, '..', 'dist');
   app.use(express.static(distPath));
   
-  app.get('*', (req, res) => {
+  app.get('(.*)', (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
