@@ -22,7 +22,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
-const PORT = isProduction ? (process.env.PORT || 5000) : 3001;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors({
   origin: true,
