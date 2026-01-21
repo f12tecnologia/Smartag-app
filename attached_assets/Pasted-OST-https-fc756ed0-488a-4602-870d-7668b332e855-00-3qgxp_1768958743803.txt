@@ -1,0 +1,66 @@
+OST https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/api/auth/signin 500 (Internal Server Error)
+window.fetch @ auth:276
+apiRequest @ api.js:25
+signIn @ api.js:50
+(anonymous) @ AuthContext.jsx:65
+handleSubmit @ AuthPage.jsx:21
+callCallback2 @ chunk-7J24JQ3Y.js?v=33feaa82:3674
+invokeGuardedCallbackDev @ chunk-7J24JQ3Y.js?v=33feaa82:3699
+invokeGuardedCallback @ chunk-7J24JQ3Y.js?v=33feaa82:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-7J24JQ3Y.js?v=33feaa82:3736
+executeDispatch @ chunk-7J24JQ3Y.js?v=33feaa82:7016
+processDispatchQueueItemsInOrder @ chunk-7J24JQ3Y.js?v=33feaa82:7036
+processDispatchQueue @ chunk-7J24JQ3Y.js?v=33feaa82:7045
+dispatchEventsForPlugins @ chunk-7J24JQ3Y.js?v=33feaa82:7053
+(anonymous) @ chunk-7J24JQ3Y.js?v=33feaa82:7177
+batchedUpdates$1 @ chunk-7J24JQ3Y.js?v=33feaa82:18909
+batchedUpdates @ chunk-7J24JQ3Y.js?v=33feaa82:3579
+dispatchEventForPluginEventSystem @ chunk-7J24JQ3Y.js?v=33feaa82:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-7J24JQ3Y.js?v=33feaa82:5478
+dispatchEvent @ chunk-7J24JQ3Y.js?v=33feaa82:5472
+dispatchDiscreteEvent @ chunk-7J24JQ3Y.js?v=33feaa82:5449Understand this error
+auth:243 Fetch error from https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/api/auth/signin: 
+console.error @ auth:243
+(anonymous) @ auth:289
+Promise.then
+window.fetch @ auth:277
+apiRequest @ api.js:25
+signIn @ api.js:50
+(anonymous) @ AuthContext.jsx:65
+handleSubmit @ AuthPage.jsx:21
+callCallback2 @ chunk-7J24JQ3Y.js?v=33feaa82:3674
+invokeGuardedCallbackDev @ chunk-7J24JQ3Y.js?v=33feaa82:3699
+invokeGuardedCallback @ chunk-7J24JQ3Y.js?v=33feaa82:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-7J24JQ3Y.js?v=33feaa82:3736
+executeDispatch @ chunk-7J24JQ3Y.js?v=33feaa82:7016
+processDispatchQueueItemsInOrder @ chunk-7J24JQ3Y.js?v=33feaa82:7036
+processDispatchQueue @ chunk-7J24JQ3Y.js?v=33feaa82:7045
+dispatchEventsForPlugins @ chunk-7J24JQ3Y.js?v=33feaa82:7053
+(anonymous) @ chunk-7J24JQ3Y.js?v=33feaa82:7177
+batchedUpdates$1 @ chunk-7J24JQ3Y.js?v=33feaa82:18909
+batchedUpdates @ chunk-7J24JQ3Y.js?v=33feaa82:3579
+dispatchEventForPluginEventSystem @ chunk-7J24JQ3Y.js?v=33feaa82:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-7J24JQ3Y.js?v=33feaa82:5478
+dispatchEvent @ chunk-7J24JQ3Y.js?v=33feaa82:5472
+dispatchDiscreteEvent @ chunk-7J24JQ3Y.js?v=33feaa82:5449Understand this error
+auth:243 Warning: Invalid value for prop `dismiss` on <li> tag. Either remove it from the element, or pass a string or number value to keep it in the DOM. For details, see https://reactjs.org/link/attribute-behavior 
+    at li
+    at https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-JHCZZTWH.js?v=33feaa82:41:13
+    at https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-AUSJIBNO.js?v=33feaa82:74:11
+    at https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-AUSJIBNO.js?v=33feaa82:54:11
+    at https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-JHCZZTWH.js?v=33feaa82:41:13
+    at https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-3Z6D4JZK.js?v=33feaa82:210:7
+    at https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-AUSJIBNO.js?v=33feaa82:74:11
+    at https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-AUSJIBNO.js?v=33feaa82:54:11
+    at https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/@radix-ui_react-toast.js?v=33feaa82:69:15
+    at Provider (https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-3Z6D4JZK.js?v=33feaa82:60:15)
+    at https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/@radix-ui_react-toast.js?v=33feaa82:418:7
+    at Presence (https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-3Z6D4JZK.js?v=33feaa82:435:11)
+    at https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/@radix-ui_react-toast.js?v=33feaa82:366:13
+    at _c3 (https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/src/components/ui/toast.jsx:60:41)
+    at Provider (https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-3Z6D4JZK.js?v=33feaa82:60:15)
+    at Provider (https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/chunk-3Z6D4JZK.js?v=33feaa82:60:15)
+    at CollectionProvider (https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/@radix-ui_react-toast.js?v=33feaa82:49:13)
+    at ToastProvider (https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/node_modules/.vite/deps/@radix-ui_react-toast.js?v=33feaa82:142:5)
+    at Toaster (https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/src/components/ui/toaster.jsx:30:22)
+    at AuthProvider (https://fc756ed0-488a-4602-870d-7668b332e855-00-3qgxpim0aqtwl.spock.replit.dev/src/contexts/AuthContext.jsx:22:32)

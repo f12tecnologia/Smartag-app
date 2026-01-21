@@ -55,7 +55,7 @@ const startServer = async () => {
     console.error('Failed to connect to database. Server will start but database operations will fail.');
   }
   
-  const host = isProduction ? '0.0.0.0' : 'localhost';
+  const host = '0.0.0.0';
   app.listen(PORT, host, () => {
     console.log(`Backend server running on http://${host}:${PORT}`);
   });
