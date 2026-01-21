@@ -49,8 +49,13 @@ if (isProduction) {
   const distPath = path.join(__dirname, '..', 'dist');
   app.use(express.static(distPath));
   
-  app.get('/*', (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
+  // Catch-all middleware for client-side routing (no wildcard pattern needed)
+  app.use((req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(distPath, 'index.html'));
+    } else {
+      res.status(404).json({ error: 'API endpoint not found' });
+    }
   });
 }
 

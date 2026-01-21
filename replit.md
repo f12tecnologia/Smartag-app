@@ -56,7 +56,7 @@ A React-based dashboard application for QR code management with authentication, 
 - Configured for Replit autoscale deployment
 - Health check endpoint at `/` responds immediately
 - Production command: `NODE_ENV=production node server/index.js`
-- Wildcard route uses `/*` syntax for Express 5 path-to-regexp compatibility
+- Uses middleware-based catch-all (no wildcard pattern) for maximum compatibility
 
 ## Recent Changes (Jan 2026)
 - Fixed deployment issues: health check route moved to top, wildcard syntax corrected
