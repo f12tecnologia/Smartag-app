@@ -9,6 +9,14 @@ import qrCodesRoutes from './routes/qrCodes.js';
 import profileRoutes from './routes/profile.js';
 import usersRoutes from './routes/users.js';
 
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
