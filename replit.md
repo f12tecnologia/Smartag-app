@@ -5,7 +5,7 @@ A React-based dashboard application for QR code management with authentication, 
 
 ## Project Architecture
 - **Frontend**: React 18 with Vite bundler (port 5000)
-- **Backend**: Express.js API (port 3001)
+- **Backend**: Express.js API (port 5000, same server)
 - **Database**: External PostgreSQL via EXTERNAL_DATABASE_URL
 - **Styling**: TailwindCSS with Radix UI components
 - **Authentication**: JWT-based with bcrypt password hashing
@@ -35,7 +35,7 @@ A React-based dashboard application for QR code management with authentication, 
 ## Development
 - Run `npm run dev` to start both backend and frontend
 - Frontend: http://localhost:5000
-- Backend API: http://localhost:3001/api
+- Backend API: http://localhost:5000/api
 
 ## API Endpoints
 - `POST /api/auth/signup` - User registration
@@ -52,7 +52,14 @@ A React-based dashboard application for QR code management with authentication, 
 - Portuguese language interface
 - Dark theme UI
 
+## Deployment
+- Configured for Replit autoscale deployment
+- Health check endpoint at `/` responds immediately
+- Production command: `NODE_ENV=production node server/index.js`
+- Wildcard route uses `/:path*` syntax for Express 5 compatibility
+
 ## Recent Changes (Jan 2026)
+- Fixed deployment issues: health check route moved to top, wildcard syntax corrected
 - Added auto-initialization of database schema on startup
 - Fixed profile route to handle UUID/VARCHAR id type mismatches
 - Pre-seeds 20 QR codes from CSV data on first run
