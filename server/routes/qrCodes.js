@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const result = await query(
-      'SELECT * FROM qr_codes ORDER BY created_at DESC'
+      'SELECT id, title, url, type, category, description, clicks, created_at FROM qr_codes ORDER BY created_at DESC'
     );
     res.json(result.rows);
   } catch (error) {

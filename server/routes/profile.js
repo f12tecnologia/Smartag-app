@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const result = await query(
-      'SELECT * FROM profiles WHERE user_id = $1',
+      'SELECT id, user_id, full_name, updated_at FROM profiles WHERE user_id = $1',
       [req.user.id]
     );
     
