@@ -31,11 +31,7 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Health check endpoint - must respond quickly (before all other routes)
-app.get('/', (req, res) => {
-  res.status(200).send('OK');
-});
-
+// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

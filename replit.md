@@ -54,8 +54,9 @@ A React-based dashboard application for QR code management with authentication, 
 
 ## Deployment
 - Configured for Replit autoscale deployment
-- Health check endpoint at `/` responds immediately
+- Build step: `npm run build` (creates dist/ folder)
 - Production command: `NODE_ENV=production node server/index.js`
+- Health check via `/api/health` endpoint
 - Uses middleware-based catch-all (no wildcard pattern) for maximum compatibility
 
 ## Recent Changes (Jan 2026)
