@@ -31,25 +31,25 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/qr-codes', qrCodesRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/users', usersRoutes);
+// Health check endpoint - must respond quickly (before all other routes)
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Move explicit health check for / to ensure it responds quickly
-app.get('/', (req, res) => {
-  res.status(200).send('OK');
-});
+app.use('/api/auth', authRoutes);
+app.use('/api/qr-codes', qrCodesRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/users', usersRoutes);
 
 if (isProduction) {
   const distPath = path.join(__dirname, '..', 'dist');
   app.use(express.static(distPath));
   
-  app.get('*', (req, res) => {
+  app.get('/:path*', (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
