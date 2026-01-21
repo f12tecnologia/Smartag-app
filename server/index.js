@@ -53,13 +53,16 @@ const startServer = async () => {
   const dbConnected = await testConnection();
   if (!dbConnected) {
     console.error('Failed to connect to database. Server will start but database operations will fail.');
-  } else {
-    await initializeDatabase();
   }
   
   const host = '0.0.0.0';
   app.listen(PORT, host, () => {
     console.log(`Backend server running on http://${host}:${PORT}`);
+    
+    // Iniciar a inicialização do banco de dados em segundo plano após o servidor abrir a porta
+    initializeDatabase().catch(err => {
+      console.error('Falha na inicialização do banco de dados:', err);
+    });
   });
 };
 
