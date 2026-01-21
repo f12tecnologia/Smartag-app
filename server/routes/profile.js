@@ -6,16 +6,15 @@ const router = express.Router();
 
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    // Tentando sem o prefixo public. primeiro, pois o search_path deve resolver
     const result = await query(
-      'SELECT id, user_id, full_name, company_name, avatar_url, phone, role, created_at, updated_at FROM profiles WHERE user_id = $1',
+      'SELECT id, user_id, full_name, company_name, avatar_url, phone, role, created_at, updated_at FROM public.profiles WHERE user_id = $1',
       [req.user.id]
     );
     
     if (result.rows.length === 0) {
       try {
         const insertResult = await query(
-          'INSERT INTO profiles (user_id, full_name, updated_at) VALUES ($1, $2, NOW()) RETURNING *',
+          'INSERT INTO public.profiles (user_id, full_name, updated_at) VALUES ($1, $2, NOW()) RETURNING *',
           [req.user.id, '']
         );
         return res.json(insertResult.rows[0]);
@@ -36,19 +35,19 @@ router.put('/', authenticateToken, async (req, res) => {
   
   try {
     const existing = await query(
-      'SELECT id FROM profiles WHERE user_id = $1',
+      'SELECT id FROM public.profiles WHERE user_id = $1',
       [req.user.id]
     );
     
     let result;
     if (existing.rows.length === 0) {
       result = await query(
-        'INSERT INTO profiles (user_id, full_name, company_name, phone, updated_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
+        'INSERT INTO public.profiles (user_id, full_name, company_name, phone, updated_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
         [req.user.id, full_name, company_name, phone]
       );
     } else {
       result = await query(
-        'UPDATE profiles SET full_name = $1, company_name = $2, phone = $3, updated_at = NOW() WHERE user_id = $4 RETURNING *',
+        'UPDATE public.profiles SET full_name = $1, company_name = $2, phone = $3, updated_at = NOW() WHERE user_id = $4 RETURNING *',
         [full_name, company_name, phone, req.user.id]
       );
     }

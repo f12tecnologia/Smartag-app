@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const result = await query(
-      'SELECT id, title, url, type, category, description, clicks, created_at FROM qr_codes ORDER BY created_at DESC'
+      'SELECT id, title, url, type, category, description, clicks, created_at FROM public.qr_codes ORDER BY created_at DESC'
     );
     res.json(result.rows || []);
   } catch (error) {
@@ -27,7 +27,7 @@ router.post('/', authenticateToken, async (req, res) => {
   try {
     const id = uuidv4();
     const result = await query(
-      `INSERT INTO qr_codes (id, title, url, type, category, description, clicks, created_at) 
+      `INSERT INTO public.qr_codes (id, title, url, type, category, description, clicks, created_at) 
        VALUES ($1, $2, $3, $4, $5, $6, 0, NOW()) 
        RETURNING *`,
       [id, title || '', url, type || 'url', category || '', description || '']
@@ -45,7 +45,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
   
   try {
     const result = await query(
-      `UPDATE qr_codes 
+      `UPDATE public.qr_codes 
        SET title = $1, url = $2, type = $3, category = $4, description = $5
        WHERE id = $6 
        RETURNING *`,
@@ -67,7 +67,7 @@ router.get('/reports', authenticateToken, async (req, res) => {
   const { from, to } = req.query;
   
   try {
-    let queryText = 'SELECT id, title, url, type, category, description, clicks, created_at FROM qr_codes';
+    let queryText = 'SELECT id, title, url, type, category, description, clicks, created_at FROM public.qr_codes';
     const params = [];
     
     if (from && to) {
@@ -90,7 +90,7 @@ router.get('/redirect/:id', async (req, res) => {
   
   try {
     const result = await query(
-      'SELECT url, clicks FROM qr_codes WHERE id = $1',
+      'SELECT url, clicks FROM public.qr_codes WHERE id = $1',
       [id]
     );
     
@@ -101,7 +101,7 @@ router.get('/redirect/:id', async (req, res) => {
     const qrCode = result.rows[0];
     
     await query(
-      'UPDATE qr_codes SET clicks = clicks + 1 WHERE id = $1',
+      'UPDATE public.qr_codes SET clicks = clicks + 1 WHERE id = $1',
       [id]
     );
     
@@ -116,7 +116,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   
   try {
-    const result = await query('DELETE FROM qr_codes WHERE id = $1 RETURNING id', [id]);
+    const result = await query('DELETE FROM public.qr_codes WHERE id = $1 RETURNING id', [id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'QR code não encontrado' });
