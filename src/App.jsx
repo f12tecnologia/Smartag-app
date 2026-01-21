@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Dashboard from '@/pages/Dashboard';
 import RedirectPage from '@/pages/RedirectPage';
 import AuthPage from '@/pages/AuthPage';

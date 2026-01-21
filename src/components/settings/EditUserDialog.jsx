@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
+import { users as usersApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Loader2, Save } from 'lucide-react';
@@ -19,23 +19,20 @@ const EditUserDialog = ({ user, open, onOpenChange, onUserUpdate }) => {
   const handleSave = async () => {
     if (!user) return;
     setIsSaving(true);
-    const { error } = await supabase.rpc('set_user_role', {
-      target_user_id: user.id,
-      new_role: role,
-    });
-    if (error) {
+    try {
+      await usersApi.updateRole(user.id, role);
       toast({
-        title: "❌ Erro ao atualizar usuário",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "✅ Usuário atualizado!",
+        title: "Usuário atualizado!",
         description: `A função de ${user.email} foi alterada para ${role}.`,
       });
       onUserUpdate();
       onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar usuário",
+        description: error.message,
+        variant: "destructive",
+      });
     }
     setIsSaving(false);
   };

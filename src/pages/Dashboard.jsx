@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 import { Plus, QrCode, BarChart3, Loader2, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { qrCodes } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import URLForm from '@/components/URLForm';
 import URLList from '@/components/URLList';
@@ -25,16 +25,11 @@ const Dashboard = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('qr_codes')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await qrCodes.getAll();
       setUrls(data);
     } catch (error) {
       toast({
-        title: "❌ Erro ao buscar URLs",
+        title: "Erro ao buscar URLs",
         description: error.message,
         variant: "destructive"
       });
@@ -48,24 +43,16 @@ const Dashboard = () => {
 
   const addUrl = async (urlData) => {
     try {
-      const { data, error } = await supabase
-        .from('qr_codes')
-        .insert([{ 
-          ...urlData,
-        }])
-        .select();
-
-      if (error) throw error;
-
-      setUrls(currentUrls => [data[0], ...currentUrls]);
+      const data = await qrCodes.create(urlData);
+      setUrls(currentUrls => [data, ...currentUrls]);
       setShowForm(false);
       toast({
-        title: "✅ URL cadastrada com sucesso!",
+        title: "URL cadastrada com sucesso!",
         description: "Agora você pode gerar o QR Code para esta URL.",
       });
     } catch (error) {
-       toast({
-        title: "❌ Erro ao cadastrar URL",
+      toast({
+        title: "Erro ao cadastrar URL",
         description: error.message,
         variant: "destructive"
       });
@@ -74,21 +61,15 @@ const Dashboard = () => {
 
   const deleteUrl = async (id) => {
     try {
-      const { error } = await supabase
-        .from('qr_codes')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await qrCodes.delete(id);
       setUrls(currentUrls => currentUrls.filter(url => url.id !== id));
       toast({
-        title: "🗑️ URL removida",
+        title: "URL removida",
         description: "A URL foi removida com sucesso do dashboard.",
       });
     } catch (error) {
       toast({
-        title: "❌ Erro ao remover URL",
+        title: "Erro ao remover URL",
         description: error.message,
         variant: "destructive"
       });

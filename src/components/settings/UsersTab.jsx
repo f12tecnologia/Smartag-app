@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
+import { users as usersApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Loader2, UserPlus, Mail, Edit, Trash2, PlusCircle } from 'lucide-react';
 import EditUserDialog from './EditUserDialog';
@@ -11,54 +11,50 @@ const UsersTab = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePassword, setInvitePassword] = useState('');
   const [isInviting, setIsInviting] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const { toast } = useToast();
-  const { profile, user: currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc('get_all_users');
-    if (error) {
+    try {
+      const data = await usersApi.getAll();
+      setUsers(data);
+    } catch (error) {
       toast({
-        title: "❌ Erro ao buscar usuários",
-        description: "Você não tem permissão para ver os usuários.",
+        title: "Erro ao buscar usuários",
+        description: error.message,
         variant: "destructive",
       });
       setUsers([]);
-    } else {
-      setUsers(data);
     }
     setLoading(false);
   }, [toast]);
 
   useEffect(() => {
-    if (profile?.role === 'admin') {
+    if (currentUser?.role === 'admin') {
       fetchUsers();
     }
-  }, [fetchUsers, profile]);
+  }, [fetchUsers, currentUser]);
 
   const handleInvite = async (e) => {
     e.preventDefault();
-    if (!inviteEmail) return;
+    if (!inviteEmail || !invitePassword) {
+      toast({ title: "Preencha email e senha", variant: "destructive" });
+      return;
+    }
     setIsInviting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-users', {
-        body: JSON.stringify({
-          action: 'inviteUser',
-          payload: { inviteEmail },
-        }),
-      });
-
-      if (error) throw new Error(error.message);
-      if (data.error) throw new Error(data.error);
-
-      toast({ title: "✅ Convite enviado!", description: `Um convite foi enviado para ${inviteEmail}.` });
+      await usersApi.invite({ email: inviteEmail, password: invitePassword });
+      toast({ title: "Usuário convidado!", description: `${inviteEmail} foi adicionado ao sistema.` });
       setInviteEmail('');
+      setInvitePassword('');
       fetchUsers();
     } catch (err) {
-      toast({ title: "❌ Erro ao convidar usuário", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao convidar usuário", description: err.message, variant: "destructive" });
     }
     setIsInviting(false);
   };
@@ -70,20 +66,11 @@ const UsersTab = () => {
     }
     if (window.confirm(`Tem certeza que deseja remover o usuário ${userEmail}? Esta ação não pode ser desfeita.`)) {
       try {
-        const { data, error } = await supabase.functions.invoke('admin-users', {
-          body: JSON.stringify({
-            action: 'deleteUser',
-            payload: { userId },
-          }),
-        });
-
-        if (error) throw new Error(error.message);
-        if (data.error) throw new Error(data.error);
-
-        toast({ title: "🗑️ Usuário removido com sucesso", description: `${userEmail} foi removido do sistema.` });
+        await usersApi.delete(userId);
+        toast({ title: "Usuário removido com sucesso", description: `${userEmail} foi removido do sistema.` });
         fetchUsers();
       } catch (err) {
-        toast({ title: "❌ Erro ao remover usuário", description: err.message, variant: "destructive" });
+        toast({ title: "Erro ao remover usuário", description: err.message, variant: "destructive" });
       }
     }
   };
@@ -96,7 +83,7 @@ const UsersTab = () => {
     setEditingUser(user);
   };
 
-  if (profile?.role !== 'admin') {
+  if (currentUser?.role !== 'admin') {
     return (
       <div>
         <h2 className="text-2xl font-bold text-white mb-4">Gerenciamento de Usuários</h2>
@@ -112,11 +99,15 @@ const UsersTab = () => {
       <div className="mb-8 flex flex-col sm:flex-row gap-4">
         <form onSubmit={handleInvite} className="flex-grow flex flex-col sm:flex-row gap-4 items-end">
           <div className="flex-grow w-full">
-            <label htmlFor="invite-email" className="block text-sm font-medium text-gray-400 mb-2">Convidar novo usuário por email</label>
+            <label htmlFor="invite-email" className="block text-sm font-medium text-gray-400 mb-2">Convidar novo usuário</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input id="invite-email" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="email@exemplo.com" className="w-full pl-10 pr-4 py-2 bg-black/30 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none transition-colors" required />
             </div>
+          </div>
+          <div className="w-full sm:w-40">
+            <label htmlFor="invite-password" className="block text-sm font-medium text-gray-400 mb-2">Senha</label>
+            <input id="invite-password" type="password" value={invitePassword} onChange={(e) => setInvitePassword(e.target.value)} placeholder="********" className="w-full px-4 py-2 bg-black/30 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none transition-colors" required />
           </div>
           <Button type="submit" disabled={isInviting} className="bg-gradient-to-r from-blue-500 to-purple-600 w-full sm:w-auto">
             {isInviting ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserPlus className="h-5 w-5" />}

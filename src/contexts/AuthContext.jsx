@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { supabase } from '@/lib/customSupabaseClient';
+import { auth, profile as profileApi } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 
 const AuthContext = createContext(undefined);
@@ -11,32 +11,22 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserProfile = useCallback(async (user) => {
-    if (!user) {
+  const fetchUserProfile = useCallback(async (currentUser) => {
+    if (!currentUser) {
       setProfile(null);
       return;
     }
     try {
-      const { data, error, status } = await supabase
-        .from('profiles')
-        .select(`*`)
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && status !== 406) {
-        throw error;
-      }
-      if (data) {
-        setProfile(data);
-      }
+      const data = await profileApi.get();
+      setProfile(data);
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
   }, []);
 
-  const handleSession = useCallback(async (session) => {
-    setSession(session);
-    const currentUser = session?.user ?? null;
+  const handleSession = useCallback(async (sessionData) => {
+    setSession(sessionData);
+    const currentUser = sessionData?.user ?? null;
     setUser(currentUser);
     await fetchUserProfile(currentUser);
     setLoading(false);
@@ -44,42 +34,63 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      handleSession(session);
+      try {
+        const { data } = await auth.getSession();
+        handleSession(data.session);
+      } catch (error) {
+        setLoading(false);
+      }
     };
     getSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      handleSession(session);
-    });
-
-    return () => subscription.unsubscribe();
   }, [handleSession]);
 
   const signUp = useCallback(async (email, password, options) => {
-    const { data, error } = await supabase.auth.signUp({ email, password, options });
-    if (error) {
+    try {
+      const { user, error } = await auth.signUp(email, password, options);
+      if (error) {
+        toast({ variant: "destructive", title: "Falha no cadastro", description: error });
+        return { user: null, error };
+      }
+      const { data } = await auth.getSession();
+      handleSession(data.session);
+      return { user, error: null };
+    } catch (error) {
       toast({ variant: "destructive", title: "Falha no cadastro", description: error.message });
+      return { user: null, error };
     }
-    return { user: data.user, error };
-  }, [toast]);
+  }, [toast, handleSession]);
 
   const signIn = useCallback(async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
+    try {
+      const { error } = await auth.signIn(email, password);
+      if (error) {
+        toast({ variant: "destructive", title: "Falha no login", description: error });
+        return { error };
+      }
+      const { data } = await auth.getSession();
+      handleSession(data.session);
+      return { error: null };
+    } catch (error) {
       toast({ variant: "destructive", title: "Falha no login", description: error.message });
+      return { error };
     }
-    return { error };
-  }, [toast]);
+  }, [toast, handleSession]);
 
   const signOut = useCallback(async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({ variant: "destructive", title: "Falha ao sair", description: error.message });
-    } else {
+    try {
+      const { error } = await auth.signOut();
+      if (error) {
+        toast({ variant: "destructive", title: "Falha ao sair", description: error });
+        return { error };
+      }
+      setUser(null);
+      setSession(null);
       setProfile(null);
+      return { error: null };
+    } catch (error) {
+      toast({ variant: "destructive", title: "Falha ao sair", description: error.message });
+      return { error };
     }
-    return { error };
   }, [toast]);
 
   const value = useMemo(() => ({

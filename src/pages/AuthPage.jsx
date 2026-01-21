@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Key, Mail } from 'lucide-react';
 
@@ -23,8 +23,8 @@ const AuthPage = () => {
       const { error } = await signUp(email, password);
       if (!error) {
         toast({
-          title: '✅ Cadastro realizado com sucesso!',
-          description: 'Verifique seu e-mail para confirmar sua conta.',
+          title: 'Cadastro realizado com sucesso!',
+          description: 'Você já pode fazer login.',
         });
         setIsLogin(true);
       }

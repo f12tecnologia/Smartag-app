@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/customSupabaseClient';
+import { qrCodes } from '@/lib/api';
 
 const RedirectPage = () => {
   const { id } = useParams();
@@ -16,26 +16,13 @@ const RedirectPage = () => {
       }
 
       try {
-        const { data: qrCode, error: fetchError } = await supabase
-          .from('qr_codes')
-          .select('url, clicks')
-          .eq('id', id)
-          .single();
-
-        if (fetchError || !qrCode) {
+        const data = await qrCodes.getRedirect(id);
+        
+        if (!data || !data.url) {
           throw new Error("O QR Code que você escaneou não é válido ou foi removido.");
         }
-
-        const { error: updateError } = await supabase
-          .from('qr_codes')
-          .update({ clicks: (qrCode.clicks || 0) + 1 })
-          .eq('id', id);
-
-        if (updateError) {
-          console.error('Erro ao atualizar contagem de cliques:', updateError);
-        }
         
-        window.location.href = qrCode.url;
+        window.location.href = data.url;
 
       } catch (err) {
         console.error("Redirect error:", err);

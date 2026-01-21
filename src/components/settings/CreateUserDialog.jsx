@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
+import { users as usersApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Loader2, Save, User, Mail, KeyRound } from 'lucide-react';
@@ -27,23 +27,15 @@ const CreateUserDialog = ({ open, onOpenChange, onUserCreated }) => {
     setIsSaving(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('admin-users', {
-        body: JSON.stringify({
-          action: 'createUser',
-          payload: {
-            email,
-            password,
-            fullName,
-            role,
-          },
-        }),
+      await usersApi.invite({
+        email,
+        password,
+        full_name: fullName,
+        role,
       });
 
-      if (error) throw new Error(error.message);
-      if (data.error) throw new Error(data.error);
-
       toast({
-        title: "✅ Usuário criado com sucesso!",
+        title: "Usuário criado com sucesso!",
         description: `${email} foi adicionado ao sistema.`,
       });
       onUserCreated();
@@ -54,7 +46,7 @@ const CreateUserDialog = ({ open, onOpenChange, onUserCreated }) => {
       setRole('user');
     } catch (err) {
       toast({
-        title: "❌ Erro ao criar usuário",
+        title: "Erro ao criar usuário",
         description: err.message,
         variant: "destructive",
       });

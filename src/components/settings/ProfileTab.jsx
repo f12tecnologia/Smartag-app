@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
+import { profile as profileApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Loader2, Save, ShieldCheck } from 'lucide-react';
 
@@ -21,22 +21,18 @@ const ProfileTab = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: fullName, updated_at: new Date() })
-      .eq('user_id', user.id);
-
-    if (error) {
+    try {
+      await profileApi.update({ full_name: fullName });
       toast({
-        title: "❌ Erro ao atualizar perfil",
+        title: "Perfil atualizado com sucesso!",
+      });
+      await fetchUserProfile(user);
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar perfil",
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "✅ Perfil atualizado com sucesso!",
-      });
-      await fetchUserProfile(user);
     }
     setLoading(false);
   };
@@ -49,7 +45,7 @@ const ProfileTab = () => {
           <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
           <div className="flex items-center gap-3">
             <p className="text-lg text-gray-200">{user?.email}</p>
-            {profile?.role === 'admin' && (
+            {user?.role === 'admin' && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-semibold border border-purple-500/50">
                 <ShieldCheck className="h-4 w-4" />
                 Administrador
@@ -77,7 +73,7 @@ const ProfileTab = () => {
             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             Salvar Alterações
           </Button>
-          <Button type="button" variant="outline" onClick={() => toast({ title: "🚧 Em breve!", description: "A troca de senha estará disponível em futuras atualizações." })}>
+          <Button type="button" variant="outline" onClick={() => toast({ title: "Em breve!", description: "A troca de senha estará disponível em futuras atualizações." })}>
             Alterar Senha
           </Button>
         </div>

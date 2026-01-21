@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Users, MousePointer, TrendingUp, BarChart, PieChart, FileDown, Calendar as CalendarIcon, Loader2, LineChart as LineChartIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ResponsiveContainer, BarChart as RechartsBarChart, Bar, PieChart as RechartsPieChart, Pie, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
-import { supabase } from '@/lib/customSupabaseClient';
+import { qrCodes } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -104,22 +104,14 @@ const ReportsPage = () => {
     const fetchUrls = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('qr_codes').select('*');
-
-        if (date?.from) {
-          query = query.gte('created_at', date.from.toISOString());
-        }
-        if (date?.to) {
-          query = query.lte('created_at', date.to.toISOString());
-        }
-
-        const { data, error } = await query.order('created_at', { ascending: false });
-
-        if (error) throw error;
+        const fromDate = date?.from ? date.from.toISOString() : null;
+        const toDate = date?.to ? date.to.toISOString() : null;
+        
+        const data = await qrCodes.getReports(fromDate, toDate);
         setUrls(data || []);
       } catch (error) {
         toast({
-          title: "❌ Erro ao buscar dados",
+          title: "Erro ao buscar dados",
           description: error.message,
           variant: "destructive",
         });
@@ -131,7 +123,7 @@ const ReportsPage = () => {
 
   const filteredUrls = useMemo(() => {
     if (urlFilter === 'all') return urls;
-    return urls.filter(url => url.id === urlFilter);
+    return urls.filter(url => url.id === parseInt(urlFilter));
   }, [urls, urlFilter]);
   
   const totalUrls = filteredUrls.length;
@@ -152,7 +144,7 @@ const ReportsPage = () => {
     avgClicks,
     topUrls: clicksByUrl.slice(0, 5),
     period: `${date?.from ? format(date.from, "dd/MM/yy") : ''} - ${date?.to ? format(date.to, "dd/MM/yy") : ''}`,
-    filterTitle: urlFilter === 'all' ? null : urls.find(u => u.id === urlFilter)?.title,
+    filterTitle: urlFilter === 'all' ? null : urls.find(u => u.id === parseInt(urlFilter))?.title,
   };
 
   return (
@@ -213,7 +205,7 @@ const ReportsPage = () => {
             <SelectContent>
               <SelectItem value="all">Todas as URLs</SelectItem>
               {urls.map(url => (
-                <SelectItem key={url.id} value={url.id}>{url.title || url.url}</SelectItem>
+                <SelectItem key={url.id} value={String(url.id)}>{url.title || url.url}</SelectItem>
               ))}
             </SelectContent>
           </Select>
