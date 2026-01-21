@@ -32,9 +32,16 @@ export const testConnection = async () => {
 export const query = async (text, params) => {
   const start = Date.now();
   try {
-    const res = await pool.query(text, params);
+    // Forçar schema public explicitamente se não estiver presente
+    let modifiedText = text;
+    if (!text.toLowerCase().includes('public.')) {
+      // Tenta adicionar "public." antes dos nomes das tabelas conhecidas
+      modifiedText = text.replace(/\b(profiles|qr_codes|users)\b/gi, 'public.$1');
+    }
+
+    const res = await pool.query(modifiedText, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { text: text.substring(0, 50), duration, rows: res.rowCount });
+    console.log('Executed query', { text: modifiedText.substring(0, 100), duration, rows: res.rowCount });
     return res;
   } catch (error) {
     console.error('Query error:', error.message);
