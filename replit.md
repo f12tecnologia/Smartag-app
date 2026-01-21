@@ -34,8 +34,8 @@ A React-based dashboard application for QR code management with authentication, 
 
 ## Development
 - Run `npm run dev` to start both backend and frontend
-- Frontend: http://localhost:5000
-- Backend API: http://localhost:5000/api
+- Frontend: http://localhost:5000 (Vite dev server)
+- Backend API: http://localhost:3001/api (proxied through Vite)
 
 ## API Endpoints
 - `POST /api/auth/signup` - User registration
