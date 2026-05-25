@@ -3,20 +3,39 @@ import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { query } from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
-import {
-  ROLES,
-  isSuperAdmin,
-  canManageUsers,
-  assignableRoles,
-} from '../lib/roles.js';
+const ROLES = { USER: 'user', ADMIN: 'admin', SUPERADMIN: 'superadmin' };
+const isSuperAdmin = (role) => role === ROLES.SUPERADMIN;
+const isAdminRole = (role) => role === ROLES.ADMIN || role === ROLES.SUPERADMIN;
+const assignableRoles = (actorRole) => {
+  if (isSuperAdmin(actorRole)) return [ROLES.USER, ROLES.ADMIN, ROLES.SUPERADMIN];
+  if (actorRole === ROLES.ADMIN) return [ROLES.USER, ROLES.ADMIN];
+  return [];
+};
 
 const router = express.Router();
 
 const requireUserManagement = (req, res, next) => {
-  if (!canManageUsers(req.user.role)) {
+  if (!isAdminRole(req.user?.role)) {
     return res.status(403).json({ error: 'Acesso negado. Apenas administradores.' });
   }
   next();
+};
+
+const listUsersQuery = async () => {
+  try {
+    return await query(
+      `SELECT u.id, u.email, u.role, u.created_at, p.full_name 
+       FROM users u 
+       LEFT JOIN profiles p ON u.id::text = p.id::text 
+       ORDER BY u.created_at DESC`
+    );
+  } catch (error) {
+    console.warn('listUsers com profiles falhou, usando fallback:', error.message);
+    return await query(
+      `SELECT id, email, role, created_at, NULL::text AS full_name 
+       FROM users ORDER BY created_at DESC`
+    );
+  }
 };
 
 const getTargetUser = async (id) => {
@@ -47,16 +66,11 @@ const assertCanModifyTarget = (actor, target, newRole) => {
 
 router.get('/', authenticateToken, requireUserManagement, async (req, res) => {
   try {
-    const result = await query(
-      `SELECT u.id, u.email, u.role, u.created_at, p.full_name 
-       FROM users u 
-       LEFT JOIN profiles p ON u.id::text = p.id::text 
-       ORDER BY u.created_at DESC`
-    );
+    const result = await listUsersQuery();
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Erro ao buscar usuários' });
+    res.status(500).json({ error: 'Erro ao buscar usuários', detail: error.message });
   }
 });
 
@@ -90,8 +104,8 @@ router.post('/invite', authenticateToken, requireUserManagement, async (req, res
 
     try {
       await query(
-        'INSERT INTO profiles (id, full_name) VALUES ($1::uuid, $2)',
-        [user.id, full_name || '']
+        'INSERT INTO profiles (id, full_name) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name',
+        [String(user.id), full_name || '']
       );
     } catch (profileErr) {
       console.warn('Invite: profiles insert skipped', profileErr.message);
@@ -150,7 +164,13 @@ router.delete('/:id', authenticateToken, requireUserManagement, async (req, res)
       return res.status(permission.status).json({ error: permission.error });
     }
 
-    await query('DELETE FROM profiles WHERE id::text = $1', [id]);
+    try {
+      await query('DELETE FROM profiles WHERE id::text = $1', [id]);
+    } catch (profileErr) {
+      if (profileErr.code !== '42P01' && !/profiles/i.test(profileErr.message)) {
+        throw profileErr;
+      }
+    }
     const result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
 
     if (result.rows.length === 0) {

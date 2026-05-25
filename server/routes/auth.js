@@ -30,8 +30,8 @@ router.post('/signup', async (req, res) => {
 
     try {
       await query(
-        'INSERT INTO profiles (id, full_name) VALUES ($1::uuid, $2)',
-        [user.id, full_name || '']
+        'INSERT INTO profiles (id, full_name) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING',
+        [String(user.id), full_name || '']
       );
     } catch (profileErr) {
       console.warn('Signup: profiles insert skipped', profileErr.message);

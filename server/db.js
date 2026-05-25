@@ -117,8 +117,19 @@ export const initializeDatabase = async () => {
       console.log('QR codes table exists with', qrCheck.rows[0].count, 'rows');
     }
 
-    if (existingTables.includes('profiles')) {
-      console.log('Profiles table exists (using external schema)');
+    if (!existingTables.includes('profiles')) {
+      await pool.query(`
+        CREATE TABLE profiles (
+          id VARCHAR(255) PRIMARY KEY,
+          full_name VARCHAR(255),
+          role VARCHAR(50) DEFAULT 'user',
+          created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('Profiles table created');
+    } else {
+      console.log('Profiles table already exists');
     }
 
     console.log('Database initialization complete');
