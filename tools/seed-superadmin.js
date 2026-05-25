@@ -7,10 +7,10 @@ import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { pool } from '../server/db.js';
-import { ROLES } from '../server/lib/roles.js';
 
 const SUPERADMIN_EMAIL = 'admin@intelfoz.com.br';
 const PASSWORD = 'Eo@230578.';
+const ROLE = 'superadmin';
 
 async function getPasswordColumn() {
   const res = await pool.query(
@@ -37,16 +37,16 @@ async function main() {
   if (existing.rows.length > 0) {
     await pool.query(
       `UPDATE users SET ${passwordCol} = $1, role = $2 WHERE email = $3`,
-      [hashedPassword, ROLES.SUPERADMIN, SUPERADMIN_EMAIL]
+      [hashedPassword, ROLE, SUPERADMIN_EMAIL]
     );
-    console.log('Superadmin atualizado:', SUPERADMIN_EMAIL, `(role: ${ROLES.SUPERADMIN})`);
+    console.log('Superadmin atualizado:', SUPERADMIN_EMAIL, `(role: ${ROLE})`);
   } else {
     const id = randomUUID();
     await pool.query(
       `INSERT INTO users (id, email, ${passwordCol}, role) VALUES ($1, $2, $3, $4)`,
-      [id, SUPERADMIN_EMAIL, hashedPassword, ROLES.SUPERADMIN]
+      [id, SUPERADMIN_EMAIL, hashedPassword, ROLE]
     );
-    console.log('Superadmin criado:', SUPERADMIN_EMAIL, `(id: ${id}, role: ${ROLES.SUPERADMIN})`);
+    console.log('Superadmin criado:', SUPERADMIN_EMAIL, `(id: ${id}, role: ${ROLE})`);
   }
 
   await pool.end();
