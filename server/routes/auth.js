@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { query } from '../db.js';
 import { generateToken, authenticateToken } from '../middleware/auth.js';
 
@@ -19,12 +20,22 @@ router.post('/signup', async (req, res) => {
     }
     
     const hashedPassword = await bcrypt.hash(password, 10);
+    const id = randomUUID();
     const result = await query(
-      'INSERT INTO users (email, password_hash, full_name, role) VALUES ($1, $2, $3, $4) RETURNING id, email, role',
-      [email, hashedPassword, full_name || '', 'user']
+      'INSERT INTO users (id, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, email, role',
+      [id, email, hashedPassword, 'user']
     );
     
     const user = result.rows[0];
+
+    try {
+      await query(
+        'INSERT INTO profiles (id, full_name) VALUES ($1::uuid, $2)',
+        [user.id, full_name || '']
+      );
+    } catch (profileErr) {
+      console.warn('Signup: profiles insert skipped', profileErr.message);
+    }
     
     const token = generateToken(user);
     res.status(201).json({ user, token });
@@ -35,34 +46,74 @@ router.post('/signup', async (req, res) => {
 });
 
 router.post('/signin', async (req, res) => {
+  if (!process.env.EXTERNAL_DATABASE_URL) {
+    console.error('Signin: EXTERNAL_DATABASE_URL não definida. Verifique o arquivo .env e reinicie o servidor.');
+    return res.status(500).json({
+      error: 'Erro ao fazer login',
+      detail: 'Servidor sem configuração de banco. Reinicie com: cd Smartag-app && npm run dev'
+    });
+  }
+
   const { email, password } = req.body;
   
   if (!email || !password) {
     return res.status(400).json({ error: 'Email e senha são obrigatórios' });
   }
   
+  const emailNorm = (email && typeof email === 'string') ? email.trim() : '';
+  if (!emailNorm) {
+    return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+  }
+
+  let result;
   try {
-    const result = await query('SELECT * FROM users WHERE email = $1', [email]);
-    
-    if (result.rows.length === 0) {
+    result = await query('SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER($1)', [emailNorm]);
+  } catch (dbErr) {
+    console.error('Signin query error:', dbErr);
+    return res.status(500).json({
+      error: 'Erro ao fazer login',
+      detail: dbErr.message || String(dbErr)
+    });
+  }
+
+  try {
+    if (!result || !result.rows || result.rows.length === 0) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
     
     const user = result.rows[0];
-    const validPassword = await bcrypt.compare(password, user.password_hash);
-    
+    const storedHash = user.password_hash || user.password;
+    if (!storedHash || typeof storedHash !== 'string') {
+      console.error('Signin: hash de senha ausente ou inválido para email', emailNorm);
+      return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+    let validPassword = false;
+    try {
+      validPassword = await bcrypt.compare(String(password), storedHash);
+    } catch (bcryptErr) {
+      console.error('Signin bcrypt.compare error:', bcryptErr.message);
+      return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
     if (!validPassword) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
     
-    const token = generateToken(user);
+    const payload = { id: String(user.id), email: String(user.email || emailNorm), role: String(user.role || 'user') };
+    let token;
+    try {
+      token = generateToken(payload);
+    } catch (tokenErr) {
+      console.error('Signin generateToken error:', tokenErr);
+      return res.status(500).json({ error: 'Erro ao gerar sessão: ' + (tokenErr.message || '') });
+    }
     res.json({ 
-      user: { id: user.id, email: user.email, role: user.role }, 
+      user: payload, 
       token 
     });
   } catch (error) {
     console.error('Signin error:', error);
-    res.status(500).json({ error: 'Erro ao fazer login' });
+    const detail = error.message || String(error);
+    res.status(500).json({ error: 'Erro ao fazer login', detail: detail });
   }
 });
 

@@ -8,11 +8,14 @@ if (!connectionString) {
   console.error('EXTERNAL_DATABASE_URL is not set');
 }
 
+const sslDisabled =
+  !connectionString ||
+  /localhost|127\.0\.0\.1|@db[:/]/i.test(connectionString) ||
+  /sslmode=disable/i.test(connectionString);
+
 export const pool = new Pool({
   connectionString,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ...(sslDisabled ? { ssl: false } : { ssl: { rejectUnauthorized: false } })
 });
 
 export const testConnection = async () => {

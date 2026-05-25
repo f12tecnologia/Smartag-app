@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.env
+.env.*
+!.env.example
+*.log
+.idea
+.vscode
+attached_assets
+replit.md
+DEPLOY-AAPANEL.md

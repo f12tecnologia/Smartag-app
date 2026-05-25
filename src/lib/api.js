@@ -30,7 +30,8 @@ const apiRequest = async (endpoint, options = {}) => {
   const data = await response.json();
   
   if (!response.ok) {
-    throw new Error(data.error || 'Erro na requisição');
+    const msg = data.detail ? `${data.error || 'Erro'}: ${data.detail}` : (data.error || 'Erro na requisição');
+    throw new Error(msg);
   }
   
   return data;

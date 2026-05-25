@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { query } from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -41,18 +42,22 @@ router.post('/invite', authenticateToken, isAdmin, async (req, res) => {
     }
     
     const hashedPassword = await bcrypt.hash(password, 10);
+    const id = randomUUID();
     const result = await query(
-      'INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role',
-      [email, hashedPassword, role || 'user']
+      'INSERT INTO users (id, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, email, role',
+      [id, email, hashedPassword, role || 'user']
     );
     
     const user = result.rows[0];
     
-    // Usando id::text para garantir compatibilidade com UUID se necessário
-    await query(
-      'INSERT INTO profiles (id, full_name) VALUES ($1::uuid, $2)',
-      [user.id, full_name || '']
-    );
+    try {
+      await query(
+        'INSERT INTO profiles (id, full_name) VALUES ($1::uuid, $2)',
+        [user.id, full_name || '']
+      );
+    } catch (profileErr) {
+      console.warn('Invite: profiles insert skipped', profileErr.message);
+    }
     
     res.status(201).json(user);
   } catch (error) {
