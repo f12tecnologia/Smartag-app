@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
- * Insere ou atualiza usuários admin no banco (admin.intelfoz.com.br e admin@intelfoz.com.br, role admin).
- * Uso: node tools/seed-admin.js
+ * Cria ou atualiza o superadmin com acesso total ao sistema.
+ * Uso: node tools/seed-superadmin.js
  */
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { pool } from '../server/db.js';
+import { ROLES } from '../server/lib/roles.js';
 
-const ADMIN_EMAILS = ['admin.intelfoz.com.br'];
+const SUPERADMIN_EMAIL = 'admin@intelfoz.com.br';
 const PASSWORD = 'Eo@230578.';
-const ROLE = 'admin';
 
 async function getPasswordColumn() {
   const res = await pool.query(
@@ -24,24 +24,6 @@ async function getPasswordColumn() {
   throw new Error('Coluna de senha (password_hash, password ou senha) não encontrada na tabela users.');
 }
 
-async function seedUser(email, passwordCol, hashedPassword) {
-  const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-  if (existing.rows.length > 0) {
-    await pool.query(
-      `UPDATE users SET ${passwordCol} = $1, role = $2 WHERE email = $3`,
-      [hashedPassword, ROLE, email]
-    );
-    console.log('Usuário admin atualizado:', email, '(role:', ROLE + ')');
-  } else {
-    const id = randomUUID();
-    await pool.query(
-      `INSERT INTO users (id, email, ${passwordCol}, role) VALUES ($1, $2, $3, $4)`,
-      [id, email, hashedPassword, ROLE]
-    );
-    console.log('Usuário admin criado:', email, '(id:', id + ', role:', ROLE + ')');
-  }
-}
-
 async function main() {
   if (!process.env.EXTERNAL_DATABASE_URL) {
     console.error('EXTERNAL_DATABASE_URL não definida. Configure o .env.');
@@ -50,9 +32,21 @@ async function main() {
 
   const passwordCol = await getPasswordColumn();
   const hashedPassword = await bcrypt.hash(PASSWORD, 10);
+  const existing = await pool.query('SELECT id FROM users WHERE email = $1', [SUPERADMIN_EMAIL]);
 
-  for (const email of ADMIN_EMAILS) {
-    await seedUser(email, passwordCol, hashedPassword);
+  if (existing.rows.length > 0) {
+    await pool.query(
+      `UPDATE users SET ${passwordCol} = $1, role = $2 WHERE email = $3`,
+      [hashedPassword, ROLES.SUPERADMIN, SUPERADMIN_EMAIL]
+    );
+    console.log('Superadmin atualizado:', SUPERADMIN_EMAIL, `(role: ${ROLES.SUPERADMIN})`);
+  } else {
+    const id = randomUUID();
+    await pool.query(
+      `INSERT INTO users (id, email, ${passwordCol}, role) VALUES ($1, $2, $3, $4)`,
+      [id, SUPERADMIN_EMAIL, hashedPassword, ROLES.SUPERADMIN]
+    );
+    console.log('Superadmin criado:', SUPERADMIN_EMAIL, `(id: ${id}, role: ${ROLES.SUPERADMIN})`);
   }
 
   await pool.end();

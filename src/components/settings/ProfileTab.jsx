@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { profile as profileApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, ShieldCheck } from 'lucide-react';
+import { Loader2, Save, ShieldCheck, Crown } from 'lucide-react';
+import { isSuperAdmin, isAdminRole, roleLabel } from '@/lib/roles';
 
 const ProfileTab = () => {
   const { user, profile, fetchUserProfile } = useAuth();
@@ -45,10 +46,16 @@ const ProfileTab = () => {
           <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
           <div className="flex items-center gap-3">
             <p className="text-lg text-gray-200">{user?.email}</p>
-            {user?.role === 'admin' && (
+            {isSuperAdmin(user?.role) && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold border border-amber-500/50">
+                <Crown className="h-4 w-4" />
+                {roleLabel(user.role)}
+              </div>
+            )}
+            {!isSuperAdmin(user?.role) && isAdminRole(user?.role) && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-semibold border border-purple-500/50">
                 <ShieldCheck className="h-4 w-4" />
-                Administrador
+                {roleLabel(user.role)}
               </div>
             )}
           </div>

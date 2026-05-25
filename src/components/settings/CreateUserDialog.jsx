@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Loader2, Save, User, Mail, KeyRound } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
+import { isSuperAdmin, ROLES } from '@/lib/roles';
 
 const CreateUserDialog = ({ open, onOpenChange, onUserCreated }) => {
   const [fullName, setFullName] = useState('');
@@ -14,6 +16,8 @@ const CreateUserDialog = ({ open, onOpenChange, onUserCreated }) => {
   const [role, setRole] = useState('user');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
+  const canAssignSuperAdmin = isSuperAdmin(currentUser?.role);
 
   const handleSave = async () => {
     if (!email || !password || !fullName) {
@@ -94,8 +98,11 @@ const CreateUserDialog = ({ open, onOpenChange, onUserCreated }) => {
               onChange={(e) => setRole(e.target.value)}
               className="w-full px-3 py-2 bg-black/30 border border-gray-600 rounded-md text-white focus:border-purple-400 focus:outline-none"
             >
-              <option value="user">Usuário</option>
-              <option value="admin">Administrador</option>
+              <option value={ROLES.USER}>Usuário</option>
+              <option value={ROLES.ADMIN}>Administrador</option>
+              {canAssignSuperAdmin && (
+                <option value={ROLES.SUPERADMIN}>Super Administrador</option>
+              )}
             </select>
           </div>
         </div>

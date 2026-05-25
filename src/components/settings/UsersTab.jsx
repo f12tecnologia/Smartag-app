@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, UserPlus, Mail, Edit, Trash2, PlusCircle } from 'lucide-react';
 import EditUserDialog from './EditUserDialog';
 import CreateUserDialog from './CreateUserDialog';
+import { isAdminRole, isSuperAdmin, roleLabel, ROLES } from '@/lib/roles';
 
 const UsersTab = () => {
   const [users, setUsers] = useState([]);
@@ -35,7 +36,7 @@ const UsersTab = () => {
   }, [toast]);
 
   useEffect(() => {
-    if (currentUser?.role === 'admin') {
+    if (isAdminRole(currentUser?.role)) {
       fetchUsers();
     }
   }, [fetchUsers, currentUser]);
@@ -60,7 +61,7 @@ const UsersTab = () => {
   };
 
   const handleDeleteUser = async (userId, userEmail) => {
-    if (currentUser.id === userId) {
+    if (currentUser.id === userId && !isSuperAdmin(currentUser?.role)) {
       toast({ title: "Ação não permitida", description: "Você não pode remover a si mesmo.", variant: "destructive" });
       return;
     }
@@ -76,14 +77,14 @@ const UsersTab = () => {
   };
 
   const openEditDialog = (user) => {
-    if (currentUser.id === user.id) {
+    if (currentUser.id === user.id && !isSuperAdmin(currentUser?.role)) {
       toast({ title: "Ação não permitida", description: "Você não pode editar sua própria função aqui. Peça a outro administrador." });
       return;
     }
     setEditingUser(user);
   };
 
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminRole(currentUser?.role)) {
     return (
       <div>
         <h2 className="text-2xl font-bold text-white mb-4">Gerenciamento de Usuários</h2>
@@ -131,7 +132,7 @@ const UsersTab = () => {
               <div>
                 <p className="font-medium text-gray-200">{u.full_name || u.email}</p>
                  <p className="text-sm text-gray-400">{u.full_name ? u.email : ''}</p>
-                <p className="text-xs text-gray-400 mt-1">Função: <span className={`font-semibold ${u.role === 'admin' ? 'text-purple-400' : 'text-blue-400'}`}>{u.role || 'user'}</span></p>
+                <p className="text-xs text-gray-400 mt-1">Função: <span className={`font-semibold ${u.role === ROLES.SUPERADMIN ? 'text-amber-400' : u.role === ROLES.ADMIN ? 'text-purple-400' : 'text-blue-400'}`}>{roleLabel(u.role)}</span></p>
               </div>
               <div className="flex gap-2 self-end sm:self-center">
                 <Button variant="outline" size="sm" onClick={() => openEditDialog(u)}><Edit className="h-4 w-4" /><span className="ml-2 hidden sm:inline">Editar</span></Button>

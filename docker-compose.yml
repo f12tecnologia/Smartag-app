@@ -39,7 +39,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["node", "tools/seed-admin.js"]
+    command: ["node", "tools/seed-superadmin.js"]
     restart: "no"
 
 volumes:

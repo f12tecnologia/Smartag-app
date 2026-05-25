@@ -8,7 +8,8 @@
     "start": "node server/index.js",
     "server": "node server/index.js",
     "build": "node tools/generate-llms.js || true && vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 5174"
+    "preview": "vite preview --host 0.0.0.0 --port 5174",
+    "seed:superadmin": "node tools/seed-superadmin.js"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.2.1",

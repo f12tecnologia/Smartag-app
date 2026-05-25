@@ -4,11 +4,15 @@ import { users as usersApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Loader2, Save } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { isSuperAdmin, ROLES } from '@/lib/roles';
 
 const EditUserDialog = ({ user, open, onOpenChange, onUserUpdate }) => {
   const [role, setRole] = useState(user?.role || 'user');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
+  const canAssignSuperAdmin = isSuperAdmin(currentUser?.role);
 
   useEffect(() => {
     if (user) {
@@ -59,8 +63,11 @@ const EditUserDialog = ({ user, open, onOpenChange, onUserUpdate }) => {
               onChange={(e) => setRole(e.target.value)}
               className="col-span-3 w-full px-3 py-2 bg-black/30 border border-gray-600 rounded-md text-white focus:border-purple-400 focus:outline-none"
             >
-              <option value="user">Usuário</option>
-              <option value="admin">Administrador</option>
+              <option value={ROLES.USER}>Usuário</option>
+              <option value={ROLES.ADMIN}>Administrador</option>
+              {canAssignSuperAdmin && (
+                <option value={ROLES.SUPERADMIN}>Super Administrador</option>
+              )}
             </select>
           </div>
         </div>
