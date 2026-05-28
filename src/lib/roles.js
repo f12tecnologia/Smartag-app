@@ -14,3 +14,11 @@ export const roleLabel = (role) => {
   if (role === ROLES.ADMIN) return 'Administrador';
   return 'Usuário';
 };
+
+/** Admin comum não pode ver nem editar contas superadmin */
+export const canManageTargetUser = (actorRole, targetRole) => {
+  if (isSuperAdmin(targetRole) && !isSuperAdmin(actorRole)) {
+    return false;
+  }
+  return isAdminRole(actorRole);
+};

@@ -67,7 +67,11 @@ const assertCanModifyTarget = (actor, target, newRole) => {
 router.get('/', authenticateToken, requireUserManagement, async (req, res) => {
   try {
     const result = await listUsersQuery();
-    res.json(result.rows);
+    let rows = result.rows;
+    if (!isSuperAdmin(req.user.role)) {
+      rows = rows.filter((u) => u.role !== ROLES.SUPERADMIN);
+    }
+    res.json(rows);
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Erro ao buscar usuários', detail: error.message });

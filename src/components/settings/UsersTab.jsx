@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, UserPlus, Mail, Edit, Trash2, PlusCircle } from 'lucide-react';
 import EditUserDialog from './EditUserDialog';
 import CreateUserDialog from './CreateUserDialog';
-import { isAdminRole, isSuperAdmin, roleLabel, ROLES } from '@/lib/roles';
+import { isAdminRole, isSuperAdmin, canManageTargetUser, roleLabel, ROLES } from '@/lib/roles';
 
 const UsersTab = () => {
   const [users, setUsers] = useState([]);
@@ -60,7 +60,11 @@ const UsersTab = () => {
     setIsInviting(false);
   };
 
-  const handleDeleteUser = async (userId, userEmail) => {
+  const handleDeleteUser = async (userId, userEmail, targetRole) => {
+    if (!canManageTargetUser(currentUser?.role, targetRole)) {
+      toast({ title: "Ação não permitida", description: "Você não pode alterar este usuário.", variant: "destructive" });
+      return;
+    }
     if (currentUser.id === userId && !isSuperAdmin(currentUser?.role)) {
       toast({ title: "Ação não permitida", description: "Você não pode remover a si mesmo.", variant: "destructive" });
       return;
@@ -77,6 +81,10 @@ const UsersTab = () => {
   };
 
   const openEditDialog = (user) => {
+    if (!canManageTargetUser(currentUser?.role, user.role)) {
+      toast({ title: "Ação não permitida", description: "Você não pode alterar este usuário.", variant: "destructive" });
+      return;
+    }
     if (currentUser.id === user.id && !isSuperAdmin(currentUser?.role)) {
       toast({ title: "Ação não permitida", description: "Você não pode editar sua própria função aqui. Peça a outro administrador." });
       return;
@@ -127,19 +135,24 @@ const UsersTab = () => {
         <div className="flex justify-center items-center py-8"><Loader2 className="h-8 w-8 text-purple-400 animate-spin" /></div>
       ) : (
         <div className="space-y-3">
-          {users.map((u) => (
+          {users.map((u) => {
+            const manageable = canManageTargetUser(currentUser?.role, u.role);
+            return (
             <div key={u.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-colors gap-2">
               <div>
                 <p className="font-medium text-gray-200">{u.full_name || u.email}</p>
                  <p className="text-sm text-gray-400">{u.full_name ? u.email : ''}</p>
                 <p className="text-xs text-gray-400 mt-1">Função: <span className={`font-semibold ${u.role === ROLES.SUPERADMIN ? 'text-amber-400' : u.role === ROLES.ADMIN ? 'text-purple-400' : 'text-blue-400'}`}>{roleLabel(u.role)}</span></p>
               </div>
+              {manageable && (
               <div className="flex gap-2 self-end sm:self-center">
                 <Button variant="outline" size="sm" onClick={() => openEditDialog(u)}><Edit className="h-4 w-4" /><span className="ml-2 hidden sm:inline">Editar</span></Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(u.id, u.email)}><Trash2 className="h-4 w-4" /><span className="ml-2 hidden sm:inline">Remover</span></Button>
+                <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(u.id, u.email, u.role)}><Trash2 className="h-4 w-4" /><span className="ml-2 hidden sm:inline">Remover</span></Button>
               </div>
+              )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
       {editingUser && <EditUserDialog user={editingUser} open={!!editingUser} onOpenChange={(isOpen) => !isOpen && setEditingUser(null)} onUserUpdate={() => { setEditingUser(null); fetchUsers(); }} />}

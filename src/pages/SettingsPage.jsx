@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, User, Users } from 'lucide-react';
@@ -6,9 +6,19 @@ import { Button } from '@/components/ui/button';
 import TabButton from '@/components/settings/TabButton';
 import ProfileTab from '@/components/settings/ProfileTab';
 import UsersTab from '@/components/settings/UsersTab';
+import { useAuth } from '@/contexts/AuthContext';
+import { isAdminRole } from '@/lib/roles';
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
+  const { user } = useAuth();
+  const showUsersTab = isAdminRole(user?.role);
+
+  useEffect(() => {
+    if (!showUsersTab && activeTab === 'users') {
+      setActiveTab('profile');
+    }
+  }, [showUsersTab, activeTab]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8">
@@ -33,12 +43,14 @@ const SettingsPage = () => {
                 isActive={activeTab === 'profile'}
                 onClick={() => setActiveTab('profile')}
               />
-              <TabButton
-                icon={<Users />}
-                label="Usuários"
-                isActive={activeTab === 'users'}
-                onClick={() => setActiveTab('users')}
-              />
+              {showUsersTab && (
+                <TabButton
+                  icon={<Users />}
+                  label="Usuários"
+                  isActive={activeTab === 'users'}
+                  onClick={() => setActiveTab('users')}
+                />
+              )}
             </nav>
           </aside>
 

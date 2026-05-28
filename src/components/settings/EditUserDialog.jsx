@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Loader2, Save } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { isSuperAdmin, ROLES } from '@/lib/roles';
+import { isSuperAdmin, canManageTargetUser, ROLES } from '@/lib/roles';
 
 const EditUserDialog = ({ user, open, onOpenChange, onUserUpdate }) => {
   const [role, setRole] = useState(user?.role || 'user');
@@ -22,6 +22,14 @@ const EditUserDialog = ({ user, open, onOpenChange, onUserUpdate }) => {
 
   const handleSave = async () => {
     if (!user) return;
+    if (!canManageTargetUser(currentUser?.role, user.role)) {
+      toast({
+        title: "Ação não permitida",
+        description: "Você não pode alterar este usuário.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsSaving(true);
     try {
       await usersApi.updateRole(user.id, role);
