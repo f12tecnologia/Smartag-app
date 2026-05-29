@@ -2,8 +2,18 @@ import express from 'express';
 import { query } from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { v4 as uuidv4 } from 'uuid';
+import { resolveSlugForCreate, resolveSlugForUpdate } from '../lib/shortLink.js';
 
 const router = express.Router();
+
+const isValidUrl = (value) => {
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 router.get('/', authenticateToken, async (req, res) => {
   try {
@@ -18,14 +28,22 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 router.post('/', authenticateToken, async (req, res) => {
-  const { title, url, type, category, description } = req.body;
-  
+  const { title, url, type, category, description, shortId } = req.body;
+
   if (!url) {
     return res.status(400).json({ error: 'URL é obrigatória' });
   }
-  
+  if (!isValidUrl(url)) {
+    return res.status(400).json({ error: 'URL inválida' });
+  }
+
   try {
-    const id = uuidv4();
+    const slugResult = await resolveSlugForCreate(shortId);
+    if (!slugResult.ok) {
+      return res.status(slugResult.status || 400).json({ error: slugResult.error });
+    }
+
+    const id = slugResult.id || uuidv4();
     const result = await query(
       `INSERT INTO public.qr_codes (id, title, url, type, category, description, clicks, created_at) 
        VALUES ($1, $2, $3, $4, $5, $6, 0, NOW()) 
@@ -40,43 +58,59 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 router.put('/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { title, url, type, category, description } = req.body;
-  
+  const { id: currentId } = req.params;
+  const { title, url, type, category, description, shortId } = req.body;
+
+  if (!url) {
+    return res.status(400).json({ error: 'URL é obrigatória' });
+  }
+  if (!isValidUrl(url)) {
+    return res.status(400).json({ error: 'URL inválida' });
+  }
+
   try {
+    const slugResult = await resolveSlugForUpdate(shortId ?? currentId, currentId);
+    if (!slugResult.ok) {
+      return res.status(slugResult.status || 400).json({ error: slugResult.error });
+    }
+
+    const newId = slugResult.id;
     const result = await query(
       `UPDATE public.qr_codes 
-       SET title = $1, url = $2, type = $3, category = $4, description = $5
-       WHERE id = $6 
+       SET id = $1, title = $2, url = $3, type = $4, category = $5, description = $6
+       WHERE id = $7 
        RETURNING *`,
-      [title, url, type, category, description, id]
+      [newId, title, url, type, category, description, currentId]
     );
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'QR code não encontrado' });
     }
-    
+
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error updating QR code:', error);
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Este identificador já está em uso.' });
+    }
     res.status(500).json({ error: 'Erro ao atualizar QR code' });
   }
 });
 
 router.get('/reports', authenticateToken, async (req, res) => {
   const { from, to } = req.query;
-  
+
   try {
     let queryText = 'SELECT id, title, url, type, category, description, clicks, created_at FROM public.qr_codes';
     const params = [];
-    
+
     if (from && to) {
       queryText += ' WHERE created_at >= $1 AND created_at <= $2';
       params.push(from, to);
     }
-    
+
     queryText += ' ORDER BY created_at DESC';
-    
+
     const result = await query(queryText, params);
     res.json(result.rows);
   } catch (error) {
@@ -87,24 +121,24 @@ router.get('/reports', authenticateToken, async (req, res) => {
 
 router.get('/redirect/:id', async (req, res) => {
   const { id } = req.params;
-  
+
   try {
     const result = await query(
       'SELECT url, clicks FROM public.qr_codes WHERE id = $1',
       [id]
     );
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'QR code não encontrado' });
     }
-    
+
     const qrCode = result.rows[0];
-    
+
     await query(
       'UPDATE public.qr_codes SET clicks = clicks + 1 WHERE id = $1',
       [id]
     );
-    
+
     res.json({ url: qrCode.url });
   } catch (error) {
     console.error('Error redirecting:', error);
@@ -114,14 +148,14 @@ router.get('/redirect/:id', async (req, res) => {
 
 router.delete('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
-  
+
   try {
     const result = await query('DELETE FROM public.qr_codes WHERE id = $1 RETURNING id', [id]);
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'QR code não encontrado' });
     }
-    
+
     res.json({ message: 'QR code removido com sucesso' });
   } catch (error) {
     console.error('Error deleting QR code:', error);

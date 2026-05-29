@@ -1,48 +1,14 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import { randomUUID } from 'crypto';
 import { query } from '../db.js';
 import { generateToken, authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/signup', async (req, res) => {
-  const { email, password, full_name } = req.body;
-  
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email e senha são obrigatórios' });
-  }
-  
-  try {
-    const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
-    if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: 'Este email já está cadastrado' });
-    }
-    
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const id = randomUUID();
-    const result = await query(
-      'INSERT INTO users (id, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, email, role',
-      [id, email, hashedPassword, 'user']
-    );
-    
-    const user = result.rows[0];
-
-    try {
-      await query(
-        'INSERT INTO profiles (id, full_name) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING',
-        [String(user.id), full_name || '']
-      );
-    } catch (profileErr) {
-      console.warn('Signup: profiles insert skipped', profileErr.message);
-    }
-    
-    const token = generateToken(user);
-    res.status(201).json({ user, token });
-  } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({ error: 'Erro ao criar conta' });
-  }
+router.post('/signup', (_req, res) => {
+  res.status(403).json({
+    error: 'Cadastro público desabilitado. Solicite acesso a um administrador.',
+  });
 });
 
 router.post('/signin', async (req, res) => {

@@ -2,33 +2,18 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Key, Mail } from 'lucide-react';
 
 const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
-  const { toast } = useToast();
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    if (isLogin) {
-      await signIn(email, password);
-    } else {
-      const { error } = await signUp(email, password);
-      if (!error) {
-        toast({
-          title: 'Cadastro realizado com sucesso!',
-          description: 'Você já pode fazer login.',
-        });
-        setIsLogin(true);
-      }
-    }
+    await signIn(email, password);
     setLoading(false);
   };
 
@@ -44,7 +29,7 @@ const AuthPage = () => {
             Bem-vindo!
           </h1>
           <p className="text-lg text-gray-300">
-            {isLogin ? 'Faça login para continuar' : 'Crie sua conta para começar'}
+            Faça login para continuar
           </p>
         </div>
 
@@ -83,7 +68,7 @@ const AuthPage = () => {
                 required
               />
             </div>
-            
+
             <Button
               type="submit"
               disabled={loading}
@@ -92,21 +77,10 @@ const AuthPage = () => {
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                isLogin ? 'Entrar' : 'Cadastrar'
+                'Entrar'
               )}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
-            >
-              {isLogin
-                ? 'Não tem uma conta? Cadastre-se'
-                : 'Já tem uma conta? Faça login'}
-            </button>
-          </div>
         </motion.div>
       </motion.div>
     </div>

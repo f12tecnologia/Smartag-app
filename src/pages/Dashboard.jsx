@@ -16,6 +16,7 @@ import AnalyticsCharts from '@/components/AnalyticsCharts';
 const Dashboard = () => {
   const [urls, setUrls] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingUrl, setEditingUrl] = useState(null);
   const [selectedQR, setSelectedQR] = useState(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -41,20 +42,57 @@ const Dashboard = () => {
     fetchUrls();
   }, [fetchUrls]);
 
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingUrl(null);
+  };
+
   const addUrl = async (urlData) => {
     try {
       const data = await qrCodes.create(urlData);
-      setUrls(currentUrls => [data, ...currentUrls]);
-      setShowForm(false);
+      setUrls((currentUrls) => [data, ...currentUrls]);
+      closeForm();
       toast({
-        title: "URL cadastrada com sucesso!",
-        description: "Agora você pode gerar o QR Code para esta URL.",
+        title: 'URL cadastrada com sucesso!',
+        description: 'Agora você pode gerar o QR Code para esta URL.',
       });
     } catch (error) {
       toast({
-        title: "Erro ao cadastrar URL",
+        title: 'Erro ao cadastrar URL',
         description: error.message,
-        variant: "destructive"
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const updateUrl = async (urlData) => {
+    if (!editingUrl) return;
+    const oldId = editingUrl.id;
+    try {
+      const data = await qrCodes.update(oldId, {
+        title: urlData.title,
+        url: urlData.url,
+        description: urlData.description,
+        shortId: urlData.shortId,
+        type: editingUrl.type || 'url',
+        category: editingUrl.category || '',
+      });
+      setUrls((currentUrls) =>
+        currentUrls.map((item) => (item.id === oldId ? data : item))
+      );
+      closeForm();
+      const slugChanged = data.id !== oldId;
+      toast({
+        title: 'URL atualizada!',
+        description: slugChanged
+          ? `Novo link curto: ${window.location.origin}/redirect/${data.id}`
+          : 'Alterações salvas. O link curto do QR permanece o mesmo.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao atualizar URL',
+        description: error.message,
+        variant: 'destructive',
       });
     }
   };
@@ -116,7 +154,10 @@ const Dashboard = () => {
           className="flex flex-wrap gap-4 justify-center mb-8"
         >
           <Button
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setEditingUrl(null);
+              setShowForm(true);
+            }}
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             size="lg"
           >
@@ -136,10 +177,12 @@ const Dashboard = () => {
           </Link>
         </motion.div>
 
-        {showForm && (
+        {(showForm || editingUrl) && (
           <URLForm
-            onSubmit={addUrl}
-            onClose={() => setShowForm(false)}
+            mode={editingUrl ? 'edit' : 'create'}
+            initialData={editingUrl}
+            onSubmit={editingUrl ? updateUrl : addUrl}
+            onClose={closeForm}
           />
         )}
 
@@ -159,6 +202,10 @@ const Dashboard = () => {
             urls={urls}
             onDelete={deleteUrl}
             onShowQR={setSelectedQR}
+            onEdit={(url) => {
+              setShowForm(false);
+              setEditingUrl(url);
+            }}
           />
         ) : (
           <motion.div
@@ -175,7 +222,10 @@ const Dashboard = () => {
               Comece criando sua primeira URL e gere QR Codes incríveis para compartilhar!
             </p>
             <Button
-              onClick={() => setShowForm(true)}
+              onClick={() => {
+                setEditingUrl(null);
+                setShowForm(true);
+              }}
               className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               size="lg"
             >

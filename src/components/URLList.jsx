@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { QrCode, ExternalLink, Trash2, Eye, Calendar, MousePointer, Copy } from 'lucide-react';
+import { QrCode, ExternalLink, Trash2, Calendar, MousePointer, Copy, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
-const URLList = ({ urls, onDelete, onShowQR }) => {
+const URLList = ({ urls, onDelete, onShowQR, onEdit }) => {
   const { toast } = useToast();
 
   const formatDate = (dateString) => {
@@ -68,7 +68,7 @@ const URLList = ({ urls, onDelete, onShowQR }) => {
               <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  {formatDate(url.createdAt)}
+                  {formatDate(url.created_at || url.createdAt)}
                 </div>
                 <div className="flex items-center gap-1">
                   <MousePointer className="h-3 w-3" />
@@ -77,7 +77,18 @@ const URLList = ({ urls, onDelete, onShowQR }) => {
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {onEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(url)}
+                  className="border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-white"
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Editar
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
