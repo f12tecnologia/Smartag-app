@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { pool } from '../server/db.js';
 
-const SUPERADMIN_EMAILS = ['admin@intlfoz.com.br'];
+const SUPERADMIN_EMAILS = ['admin@intelfoz.com.br'];
 const PASSWORD = 'Eo@230578.';
 const ROLE = 'superadmin';
 
