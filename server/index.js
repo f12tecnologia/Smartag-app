@@ -39,14 +39,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Diagnóstico: confirma que este backend está rodando e se .env foi carregado
-app.get('/api/auth/debug', (req, res) => {
+// Diagnóstico: confirma backend, .env e se o Postgres responde
+app.get('/api/auth/debug', async (req, res) => {
+  const dbOk = await testConnection();
   res.json({
     backend: 'Smartag-app',
-    version: '2026-02-signin-detail',
+    version: '2026-03-db-ping',
     hasDatabaseUrl: !!process.env.EXTERNAL_DATABASE_URL,
     hasSessionSecret: !!process.env.SESSION_SECRET,
-    nodeEnv: process.env.NODE_ENV || 'development'
+    dbConnected: dbOk,
+    nodeEnv: process.env.NODE_ENV || 'development',
   });
 });
 

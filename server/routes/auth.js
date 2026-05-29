@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { query } from '../db.js';
 import { generateToken, authenticateToken } from '../middleware/auth.js';
+import { formatDbError } from '../lib/dbError.js';
 
 const router = express.Router();
 
@@ -37,8 +38,8 @@ router.post('/signin', async (req, res) => {
   } catch (dbErr) {
     console.error('Signin query error:', dbErr);
     return res.status(500).json({
-      error: 'Erro ao fazer login',
-      detail: dbErr.message || String(dbErr)
+      error: 'Erro ao conectar ao banco de dados',
+      detail: formatDbError(dbErr),
     });
   }
 

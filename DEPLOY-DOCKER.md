@@ -70,6 +70,44 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile local-d
 | `exec entrypoint.sh: no such file` | CRLF no script (Windows) | Rebuild após pull (Dockerfile corrige com `sed`) |
 | Erro de senha no banco | `.env` incorreto ou Postgres errado | Ajustar `EXTERNAL_DATABASE_URL` no `.env` |
 | Invalid Date na lista | Build antigo | Rebuild + Ctrl+F5 |
+| Login: AggregateError | App sem acesso ao Postgres (seed OK, app não) | Ver seção abaixo |
+
+## Login falha com AggregateError (seed OK, site não loga)
+
+O `npm run seed:superadmin` usa o `.env` **no host** e conecta ao Postgres.
+
+O site (aaPanel ou Docker) precisa da **mesma** `EXTERNAL_DATABASE_URL`.
+
+**aaPanel (Node sem Docker):**
+
+1. Em **Environment** do projeto Node, defina `EXTERNAL_DATABASE_URL` e `SESSION_SECRET` (igual ao `.env`).
+2. **Restart** do projeto na porta 3002.
+3. Teste: `curl -s http://127.0.0.1:3002/api/health`
+
+**Docker:**
+
+```bash
+cd /www/Smartag-app
+cat .env   # conferir EXTERNAL_DATABASE_URL
+docker compose up -d
+docker compose logs app --tail 20
+curl -s http://127.0.0.1:3002/api/auth/debug
+```
+
+Resposta esperada de `/api/auth/debug`: `"hasDatabaseUrl":true` e `"dbConnected":true`
+
+### Porta 3002 já em uso (`address already in use`)
+
+Dois processos não podem usar a mesma porta. Escolha **um** método:
+
+```bash
+ss -tlnp | grep 3002
+# ou: fuser -v 3002/tcp
+```
+
+**Só Docker:** pare o projeto Node no aaPanel → `docker compose down` → `docker compose up --build -d`
+
+**Só aaPanel:** `docker compose down` → reinicie o projeto Node na porta 3002 com `EXTERNAL_DATABASE_URL` no painel
 
 ## aaPanel sem Docker
 
