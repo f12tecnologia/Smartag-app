@@ -23,7 +23,7 @@ COPY tools ./tools
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY --from=builder /app/dist ./dist
 
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 EXPOSE 3002
 

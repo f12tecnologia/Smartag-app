@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-# Dentro do container, localhost aponta para o próprio container.
-# Se o Postgres está no host da VPS (como no .env com localhost), usa host.docker.internal.
+# Dentro do container, localhost aponta para o proprio container.
+# Se o Postgres esta no host (como no .env com localhost), usa host.docker.internal.
 if [ -n "$EXTERNAL_DATABASE_URL" ]; then
   case "$EXTERNAL_DATABASE_URL" in
     *localhost*|*127.0.0.1*)
