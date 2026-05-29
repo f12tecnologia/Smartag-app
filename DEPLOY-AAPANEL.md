@@ -80,3 +80,15 @@ Garantir que a pasta `dist` seja criada.
 
 - Verificar se o projeto está **Running** e se a porta no aaPanel é a mesma de `PORT`
 - Consultar **Project log** do Node e **Error log** do nginx para erros de conexão (ex.: banco ou variáveis faltando)
+
+## Deploy com Docker na VPS
+
+Se a aplicação roda via Docker, use o guia dedicado: [DEPLOY-DOCKER.md](DEPLOY-DOCKER.md).
+
+Comando resumido após `git pull`:
+
+```bash
+docker compose up --build -d --remove-orphans
+```
+
+Ou: `sh scripts/deploy-vps.sh`
