@@ -10,7 +10,7 @@ if (!connectionString) {
 
 const sslDisabled =
   !connectionString ||
-  /localhost|127\.0\.0\.1|@db[:/]/i.test(connectionString) ||
+  /localhost|127\.0\.0\.1|host\.docker\.internal|@db[:/]/i.test(connectionString) ||
   /sslmode=disable/i.test(connectionString);
 
 export const pool = new Pool({

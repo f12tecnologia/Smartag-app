@@ -1,46 +1,30 @@
-services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: smartag
-      POSTGRES_PASSWORD: smartag
-      POSTGRES_DB: smartag
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U smartag -d smartag"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+# Produção / VPS: usa variáveis do arquivo .env (EXTERNAL_DATABASE_URL, SESSION_SECRET, etc.)
+# Subir: docker compose up --build -d
+# Seed admin: docker compose --profile seed run --rm seed
 
+services:
   app:
     build: .
     ports:
-      - "3002:3002"
+      - "${PORT:-3002}:3002"
+    env_file:
+      - .env
     environment:
-      EXTERNAL_DATABASE_URL: postgresql://smartag:smartag@db:5432/smartag?sslmode=disable
-      SESSION_SECRET: smartag-docker-dev-secret
-      NODE_ENV: production
-      PORT: 3002
-    depends_on:
-      db:
-        condition: service_healthy
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3002}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
 
   seed:
     build: .
     profiles:
       - seed
+    env_file:
+      - .env
     environment:
-      EXTERNAL_DATABASE_URL: postgresql://smartag:smartag@db:5432/smartag?sslmode=disable
-      SESSION_SECRET: smartag-docker-dev-secret
-      NODE_ENV: production
-    depends_on:
-      db:
-        condition: service_healthy
+      NODE_ENV: ${NODE_ENV:-production}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: ["node", "tools/seed-superadmin.js"]
     restart: "no"
-
-volumes:
-  postgres_data:
