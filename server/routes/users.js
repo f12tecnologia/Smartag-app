@@ -49,7 +49,7 @@ const assertCanModifyTarget = (actor, target, newRole) => {
   }
 
   if (isSuperAdmin(target.role) && !isSuperAdmin(actor.role)) {
-    return { ok: false, status: 403, error: 'Apenas super administradores podem alterar outro super administrador.' };
+    return { ok: false, status: 404, error: 'Usuário não encontrado' };
   }
 
   if (newRole === ROLES.SUPERADMIN && !isSuperAdmin(actor.role)) {
